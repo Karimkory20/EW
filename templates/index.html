@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Member Performance</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: url("{{ url_for('serve_static', filename='enactus.jpg') }}") no-repeat center center fixed;
+            background-size: auto;
+            color: rgb(255, 255, 255);
+            text-align: center;
+            padding: 20px;
+        }
+        
+        #container {
+            background: rgba(0, 0, 50, 0.85);
+            padding: 30px;
+            border-radius: 10px;
+            width: 60%;
+            margin: auto;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.3);
+        }
+
+        input, button {
+            padding: 12px;
+            margin: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        input {
+            width: 75%;
+        }
+
+        button {
+            background: dodgerblue;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: royalblue;
+        }
+
+        #upload-message, #performance-display {
+            margin-top: 15px;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 15px;
+            border-collapse: collapse;
+            background: rgba(255, 255, 255, 0.9);
+            color: black;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: dodgerblue;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>Member Performance</h1>
+        
+        <form id="upload-form" method="POST" enctype="multipart/form-data">
+            <input type="file" name="file">
+            <button type="submit">Upload Data</button>
+        </form>
+        
+        <div id="upload-message"></div>
+
+        <input type="text" id="member-id" placeholder="Enter Member ID">
+        <button id="get-performance">Get Performance</button>
+        
+        <div id="performance-display"></div>
+    </div>
+
+    <script>
+        document.getElementById('upload-form').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const form = event.target;
+            const formData = new FormData(form);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.text())
+            .then(message => {
+                document.getElementById('upload-message').textContent = message;
+                if (message === "File uploaded successfully!"){
+                    setTimeout(() => {
+                        document.getElementById('upload-message').textContent = "";
+                    }, 3000);
+                }
+            })
+            .catch(error => {
+                document.getElementById('upload-message').textContent = 'Upload failed.';
+                console.error('Upload error:', error);
+            });
+        });
+
+        document.getElementById('get-performance').addEventListener('click', () => {
+            const memberId = document.getElementById('member-id').value;
+            fetch(`/performance/${memberId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(errorData => {
+                            throw new Error(errorData.error);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    let performanceHtml = '<h2>Performance Data</h2>';
+                    performanceHtml += `<table><tr><th>Attribute</th><th>Value</th></tr>`;
+                    for (const key in data) {
+                        if (key !== 'id') {
+                            performanceHtml += `<tr><td>${key}</td><td>${data[key]}</td></tr>`;
+                        }
+                    }
+                    performanceHtml += '</table>';
+                    document.getElementById('performance-display').innerHTML = performanceHtml;
+                })
+                .catch(error => {
+                    document.getElementById('performance-display').innerHTML = `<p>${error.message}</p>`;
+                });
+        });
+    </script>
+</body>
+</html>
