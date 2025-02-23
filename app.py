@@ -85,6 +85,9 @@ def get_performance(member_id):
 def serve_static(filename):
     return send_from_directory('static', filename)
 
+import os
+
 if __name__ == '__main__':
-    app.run(debug=False, host='0.0.0.0', port=10000)
+    port = int(os.environ.get('PORT', 10000))
+    app.run(debug=False, host='0.0.0.0', port=port)
 
